@@ -148,3 +148,12 @@ async def stylize(file_id: str):
 async def health():
     """Health check endpoint."""
     return {"status": "ok", "gemini": gemini_client.HAS_GEMINI, "fal": fal_stylize.HAS_FAL}
+
+
+@app.get("/api/gemini-key")
+async def get_gemini_key():
+    """Return Gemini API key for client-side Live API (hackathon only - not production safe)."""
+    key = os.getenv("GEMINI_API_KEY")
+    if not key:
+        raise HTTPException(500, "GEMINI_API_KEY not configured")
+    return {"key": key}

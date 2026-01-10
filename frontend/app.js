@@ -238,6 +238,7 @@ function setupUI() {
     });
 
     document.getElementById('fly-btn').addEventListener('click', toggleFlyMode);
+    document.getElementById('voice-btn').addEventListener('click', toggleVoiceChat);
 
     // Mouse controls
     setupMouseControls();
@@ -381,6 +382,7 @@ function loadTexture(base64) {
         createTerrain();
         document.getElementById('view-section').classList.remove('hidden');
         document.getElementById('lighting-section').classList.remove('hidden');
+        document.getElementById('voice-section').classList.remove('hidden');
         updateStepNumbers();
     });
 }
@@ -716,6 +718,24 @@ function updateOrbitCamera() {
     state.camera.lookAt(0, 0, 0);
 }
 
+function getGeoPosition() {
+    if (!state.bounds) return null;
+
+    const pos = state.planeMode ? state.plane.position : state.camera.position;
+    const terrainSize = 100;
+
+    // Convert world coords to 0-1 UV
+    const u = (pos.x + terrainSize / 2) / terrainSize;
+    const v = (pos.z + terrainSize / 2) / terrainSize;
+
+    // Map to geo coordinates
+    const lat = state.bounds.north - v * (state.bounds.north - state.bounds.south);
+    const lon = state.bounds.west + u * (state.bounds.east - state.bounds.west);
+    const altitude = Math.max(0, pos.y * 50);
+
+    return { lat, lon, altitude };
+}
+
 function toggleFlyMode() {
     state.cameraMode = state.cameraMode === 'orbit' ? 'fly' : 'orbit';
 
@@ -737,6 +757,45 @@ function toggleFlyMode() {
         }
         document.getElementById('fly-btn').textContent = '✈️ Fly Plane';
         updateOrbitCamera();
+    }
+}
+
+async function toggleVoiceChat() {
+    const btn = document.getElementById('voice-btn');
+    const status = document.getElementById('voice-status');
+
+    if (VoiceChat.isActive()) {
+        VoiceChat.stop();
+        btn.textContent = '🎤 Start Voice Chat';
+        btn.classList.remove('active');
+        status.classList.add('hidden');
+    } else {
+        try {
+            btn.textContent = 'Connecting...';
+            btn.disabled = true;
+
+            // Fetch API key
+            const resp = await fetch('/api/gemini-key');
+            if (!resp.ok) throw new Error('Failed to get API key');
+            const { key } = await resp.json();
+
+            // Get map name from filename
+            const mapName = document.getElementById('file-name')?.textContent || 'terrain';
+
+            // Initialize and start
+            VoiceChat.init(key, mapName, state.bounds, getGeoPosition);
+            await VoiceChat.start();
+
+            btn.textContent = '🔴 Stop Voice Chat';
+            btn.classList.add('active');
+            btn.disabled = false;
+            status.classList.remove('hidden');
+        } catch (err) {
+            console.error('Voice chat error:', err);
+            setStatus('Voice chat failed: ' + err.message, 'error');
+            btn.textContent = '🎤 Start Voice Chat';
+            btn.disabled = false;
+        }
     }
 }
 
