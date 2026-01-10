@@ -110,6 +110,7 @@ function init() {
 
     // Setup UI
     setupUI();
+    updateStepNumbers();
 
     // Start render loop
     animate();
@@ -232,6 +233,22 @@ function setupUI() {
     });
 }
 
+function updateStepNumbers() {
+    const sections = document.querySelectorAll('#controls section');
+    let stepNumber = 1;
+
+    sections.forEach(section => {
+        const heading = section.querySelector('h3[data-step-label]');
+        if (!heading) return;
+
+        if (!section.classList.contains('hidden')) {
+            const label = heading.dataset.stepLabel;
+            heading.textContent = `${stepNumber}. ${label.toUpperCase()}`;
+            stepNumber++;
+        }
+    });
+}
+
 function setupMouseControls() {
     const canvas = state.renderer.domElement;
 
@@ -321,6 +338,7 @@ async function uploadFile(file) {
 
         // Show terrain section
         document.getElementById('terrain-section').classList.remove('hidden');
+        updateStepNumbers();
 
         hideLoading();
         setStatus(`Loaded: ${data.width}×${data.height}px`, 'success');
@@ -342,6 +360,7 @@ function loadTexture(base64) {
         createTerrain();
         document.getElementById('view-section').classList.remove('hidden');
         document.getElementById('lighting-section').classList.remove('hidden');
+        updateStepNumbers();
     });
 }
 

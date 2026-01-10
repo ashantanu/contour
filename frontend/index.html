@@ -18,7 +18,7 @@
 
         <!-- Upload Section -->
         <section id="upload-section">
-            <h3>1. Upload Map</h3>
+            <h3 data-step-label="Upload Map"></h3>
             <div id="drop-zone">
                 <p>Drop GeoTIFF or image<br><small>or click to browse</small></p>
                 <input type="file" id="file-input" accept=".tif,.tiff,.jpg,.jpeg,.png,.webp">
@@ -31,7 +31,7 @@
 
         <!-- Bounds Section (for non-GeoTIFF) -->
         <section id="bounds-section" class="hidden">
-            <h3>2. Set Bounds</h3>
+            <h3 data-step-label="Set Bounds"></h3>
             <div class="bounds-grid">
                 <div class="input-group">
                     <label>North</label>
@@ -55,7 +55,7 @@
 
         <!-- Terrain Section -->
         <section id="terrain-section" class="hidden">
-            <h3>3. Build Terrain</h3>
+            <h3 data-step-label="Build Terrain"></h3>
             <button class="primary" id="fetch-dem-btn">Fetch Real DEM</button>
             <button class="secondary" id="gemini-heightmap-btn">🤖 Generate with Gemini</button>
             <button class="secondary" id="stylize-btn">🎨 Stylize Texture</button>
@@ -63,7 +63,7 @@
 
         <!-- View Controls -->
         <section id="view-section" class="hidden">
-            <h3>4. Explore</h3>
+            <h3 data-step-label="Explore"></h3>
             <div class="slider-group">
                 <label>Elevation Scale</label>
                 <input type="range" id="exag" min="1" max="80" value="7">
@@ -79,7 +79,7 @@
 
         <!-- Lighting Controls -->
         <section id="lighting-section" class="hidden">
-            <h3>5. Lighting</h3>
+            <h3 data-step-label="Lighting"></h3>
             <div class="slider-group">
                 <label>Sun Azimuth</label>
                 <input type="range" id="sun-azimuth" min="0" max="360" value="135">
