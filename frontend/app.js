@@ -11,17 +11,17 @@ const state = {
     camera: null,
     renderer: null,
     terrain: null,
-    
+
     // Data
     fileId: null,
     bounds: null,
     textureB64: null,
     heightmapB64: null,
-    
+
     // Textures
     colorTexture: null,
     heightmapTexture: null,
-    
+
     // Camera
     cameraMode: 'orbit',
     orbitAngle: 0,
@@ -37,38 +37,38 @@ const state = {
 // ===========================================
 function init() {
     const container = document.getElementById('container');
-    
+
     // Scene
     state.scene = new THREE.Scene();
     state.scene.background = new THREE.Color(0x0a1628);
-    
+
     // Camera
     state.camera = new THREE.PerspectiveCamera(
-        60, 
-        window.innerWidth / window.innerHeight, 
-        0.1, 
+        60,
+        window.innerWidth / window.innerHeight,
+        0.1,
         2000
     );
     updateOrbitCamera();
-    
+
     // Renderer
     state.renderer = new THREE.WebGLRenderer({ antialias: true });
     state.renderer.setSize(window.innerWidth, window.innerHeight);
     state.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     container.appendChild(state.renderer.domElement);
-    
+
     // Lighting
     const ambient = new THREE.AmbientLight(0xffffff, 0.5);
     state.scene.add(ambient);
-    
+
     const sun = new THREE.DirectionalLight(0xffffff, 0.8);
     sun.position.set(-100, 150, 100);
     state.scene.add(sun);
-    
+
     const fill = new THREE.DirectionalLight(0xffffff, 0.3);
     fill.position.set(100, 50, -100);
     state.scene.add(fill);
-    
+
     // Water plane
     const waterGeo = new THREE.PlaneGeometry(400, 400);
     const waterMat = new THREE.MeshStandardMaterial({
@@ -81,13 +81,13 @@ function init() {
     water.rotation.x = -Math.PI / 2;
     water.position.y = -1;
     state.scene.add(water);
-    
+
     // Setup UI
     setupUI();
-    
+
     // Start render loop
     animate();
-    
+
     setStatus('Ready. Upload a map to begin.');
 }
 
@@ -98,30 +98,30 @@ function setupUI() {
     // File upload
     const dropZone = document.getElementById('drop-zone');
     const fileInput = document.getElementById('file-input');
-    
+
     dropZone.addEventListener('click', () => fileInput.click());
-    
+
     dropZone.addEventListener('dragover', (e) => {
         e.preventDefault();
         dropZone.classList.add('dragover');
     });
-    
+
     dropZone.addEventListener('dragleave', () => {
         dropZone.classList.remove('dragover');
     });
-    
+
     dropZone.addEventListener('drop', (e) => {
         e.preventDefault();
         dropZone.classList.remove('dragover');
         const file = e.dataTransfer.files[0];
         if (file) uploadFile(file);
     });
-    
+
     fileInput.addEventListener('change', (e) => {
         const file = e.target.files[0];
         if (file) uploadFile(file);
     });
-    
+
     // Bounds inputs
     ['north', 'south', 'east', 'west'].forEach(id => {
         document.getElementById(id).addEventListener('change', (e) => {
@@ -129,14 +129,14 @@ function setupUI() {
             state.bounds[id] = parseFloat(e.target.value);
         });
     });
-    
+
     // Extract bounds button
     document.getElementById('extract-bounds-btn').addEventListener('click', extractBoundsWithGemini);
-    
+
     // Terrain buttons
     document.getElementById('fetch-dem-btn').addEventListener('click', fetchDEM);
     document.getElementById('gemini-heightmap-btn').addEventListener('click', generateHeightmapWithGemini);
-    
+
     // View controls
     const exagSlider = document.getElementById('exag');
     exagSlider.addEventListener('input', () => {
@@ -145,21 +145,21 @@ function setupUI() {
             state.terrain.material.displacementScale = parseFloat(exagSlider.value);
         }
     });
-    
+
     const rotSlider = document.getElementById('rotation');
     rotSlider.addEventListener('input', () => {
         document.getElementById('rotation-val').textContent = rotSlider.value + '%';
     });
-    
+
     document.getElementById('fly-btn').addEventListener('click', toggleFlyMode);
-    
+
     // Mouse controls
     setupMouseControls();
-    
+
     // Keyboard controls
     document.addEventListener('keydown', (e) => state.keys[e.code] = true);
     document.addEventListener('keyup', (e) => state.keys[e.code] = false);
-    
+
     // Resize
     window.addEventListener('resize', () => {
         state.camera.aspect = window.innerWidth / window.innerHeight;
@@ -170,14 +170,14 @@ function setupUI() {
 
 function setupMouseControls() {
     const canvas = state.renderer.domElement;
-    
+
     canvas.addEventListener('mousedown', (e) => {
         if (state.cameraMode === 'orbit') {
             state.isDragging = true;
             state.lastMouse = { x: e.clientX, y: e.clientY };
         }
     });
-    
+
     canvas.addEventListener('mousemove', (e) => {
         if (state.cameraMode === 'orbit' && state.isDragging) {
             const dx = e.clientX - state.lastMouse.x;
@@ -189,15 +189,15 @@ function setupMouseControls() {
         } else if (state.cameraMode === 'fly' && document.pointerLockElement === canvas) {
             state.camera.rotation.y -= e.movementX * 0.002;
             state.camera.rotation.x = Math.max(
-                -Math.PI / 2, 
+                -Math.PI / 2,
                 Math.min(Math.PI / 2, state.camera.rotation.x - e.movementY * 0.002)
             );
         }
     });
-    
+
     canvas.addEventListener('mouseup', () => state.isDragging = false);
     canvas.addEventListener('mouseleave', () => state.isDragging = false);
-    
+
     canvas.addEventListener('wheel', (e) => {
         if (state.cameraMode === 'orbit') {
             state.orbitRadius = Math.max(20, Math.min(300, state.orbitRadius + e.deltaY * 0.1));
@@ -212,36 +212,36 @@ function setupMouseControls() {
 async function uploadFile(file) {
     showLoading('Uploading...');
     setStatus('Uploading...', 'loading');
-    
+
     const formData = new FormData();
     formData.append('file', file);
-    
+
     try {
         const response = await fetch('/api/upload', {
             method: 'POST',
             body: formData
         });
-        
+
         if (!response.ok) {
             const err = await response.json();
             throw new Error(err.detail || 'Upload failed');
         }
-        
+
         const data = await response.json();
-        
+
         // Store data
         state.fileId = data.file_id;
         state.textureB64 = data.texture_b64;
-        
+
         // Update UI
         document.getElementById('file-info').classList.remove('hidden');
         document.getElementById('file-name').textContent = file.name;
-        
+
         if (data.has_bounds) {
             state.bounds = data.bounds;
             document.getElementById('file-bounds').textContent = 'Georeferenced';
             document.getElementById('bounds-section').classList.add('hidden');
-            
+
             // Update bounds inputs
             document.getElementById('north').value = data.bounds.north.toFixed(4);
             document.getElementById('south').value = data.bounds.south.toFixed(4);
@@ -251,16 +251,16 @@ async function uploadFile(file) {
             document.getElementById('file-bounds').textContent = 'No bounds';
             document.getElementById('bounds-section').classList.remove('hidden');
         }
-        
+
         // Load texture
         loadTexture(data.texture_b64);
-        
+
         // Show terrain section
         document.getElementById('terrain-section').classList.remove('hidden');
-        
+
         hideLoading();
         setStatus(`Loaded: ${data.width}×${data.height}px`, 'success');
-        
+
     } catch (err) {
         hideLoading();
         setStatus('Error: ' + err.message, 'error');
@@ -287,13 +287,13 @@ function createTerrain() {
         state.terrain.geometry.dispose();
         state.terrain.material.dispose();
     }
-    
+
     const size = 100;
     const segments = 256;
     const exag = parseFloat(document.getElementById('exag').value);
-    
+
     const geometry = new THREE.PlaneGeometry(size, size, segments, segments);
-    
+
     const material = new THREE.MeshStandardMaterial({
         map: state.colorTexture,
         displacementMap: state.heightmapTexture || null,
@@ -302,7 +302,7 @@ function createTerrain() {
         metalness: 0.1,
         side: THREE.DoubleSide
     });
-    
+
     state.terrain = new THREE.Mesh(geometry, material);
     state.terrain.rotation.x = -Math.PI / 2;
     state.scene.add(state.terrain);
@@ -316,32 +316,32 @@ async function fetchDEM() {
         setStatus('Set bounds first', 'error');
         return;
     }
-    
+
     const { north, south, east, west } = state.bounds;
     const zoom = 11;
-    
+
     showLoading('Fetching elevation tiles...');
     setStatus('Fetching DEM...', 'loading');
-    
+
     try {
         // Convert bounds to tile coords
         const minTile = latLonToTile(north, west, zoom);
         const maxTile = latLonToTile(south, east, zoom);
-        
+
         const xMin = Math.min(minTile.x, maxTile.x);
         const xMax = Math.max(minTile.x, maxTile.x);
         const yMin = Math.min(minTile.y, maxTile.y);
         const yMax = Math.max(minTile.y, maxTile.y);
-        
+
         const tileSize = 256;
         const width = (xMax - xMin + 1) * tileSize;
         const height = (yMax - yMin + 1) * tileSize;
-        
+
         const canvas = document.createElement('canvas');
         canvas.width = width;
         canvas.height = height;
         const ctx = canvas.getContext('2d');
-        
+
         // Fetch tiles
         const tilePromises = [];
         for (let y = yMin; y <= yMax; y++) {
@@ -354,9 +354,9 @@ async function fetchDEM() {
                 );
             }
         }
-        
+
         const tiles = await Promise.all(tilePromises);
-        
+
         // Draw tiles
         let loaded = 0;
         for (const tile of tiles) {
@@ -365,22 +365,22 @@ async function fetchDEM() {
                 loaded++;
             }
         }
-        
+
         if (loaded === 0) {
             throw new Error('No tiles loaded - try Gemini heightmap instead');
         }
-        
+
         // Convert to elevation
         const imageData = ctx.getImageData(0, 0, width, height);
         const elevation = new Float32Array(width * height);
-        
+
         for (let i = 0; i < width * height; i++) {
             const r = imageData.data[i * 4];
             const g = imageData.data[i * 4 + 1];
             const b = imageData.data[i * 4 + 2];
             elevation[i] = (r * 256 + g + b / 256) - 32768;
         }
-        
+
         // Find range
         let eMin = Infinity, eMax = -Infinity;
         for (const e of elevation) {
@@ -389,14 +389,14 @@ async function fetchDEM() {
                 eMax = Math.max(eMax, e);
             }
         }
-        
+
         // Create heightmap
         const hmCanvas = document.createElement('canvas');
         hmCanvas.width = width;
         hmCanvas.height = height;
         const hmCtx = hmCanvas.getContext('2d');
         const hmData = hmCtx.createImageData(width, height);
-        
+
         for (let i = 0; i < width * height; i++) {
             let val = 0;
             if (elevation[i] > 0 && eMax > eMin) {
@@ -408,30 +408,30 @@ async function fetchDEM() {
             hmData.data[i * 4 + 3] = 255;
         }
         hmCtx.putImageData(hmData, 0, 0);
-        
+
         // Crop to bounds
         const tileBoundsNW = tileToLatLon(xMin, yMin, zoom);
         const tileBoundsSE = tileToLatLon(xMax + 1, yMax + 1, zoom);
-        
+
         const cropX = ((west - tileBoundsNW.lon) / (tileBoundsSE.lon - tileBoundsNW.lon)) * width;
         const cropY = ((tileBoundsNW.lat - north) / (tileBoundsNW.lat - tileBoundsSE.lat)) * height;
         const cropW = ((east - west) / (tileBoundsSE.lon - tileBoundsNW.lon)) * width;
         const cropH = ((north - south) / (tileBoundsNW.lat - tileBoundsSE.lat)) * height;
-        
+
         const finalCanvas = document.createElement('canvas');
         finalCanvas.width = 512;
         finalCanvas.height = 512;
         finalCanvas.getContext('2d').drawImage(
             hmCanvas, cropX, cropY, cropW, cropH, 0, 0, 512, 512
         );
-        
+
         // Create texture
         state.heightmapTexture = new THREE.CanvasTexture(finalCanvas);
         createTerrain();
-        
+
         hideLoading();
         setStatus(`DEM loaded: ${eMin.toFixed(0)}m - ${eMax.toFixed(0)}m`, 'success');
-        
+
     } catch (err) {
         hideLoading();
         setStatus('DEM Error: ' + err.message, 'error');
@@ -472,32 +472,32 @@ async function extractBoundsWithGemini() {
         setStatus('Upload a file first', 'error');
         return;
     }
-    
+
     showLoading('Extracting bounds with Gemini...');
     setStatus('Analyzing map...', 'loading');
-    
+
     try {
         const response = await fetch(`/api/extract-bounds?file_id=${state.fileId}`, {
             method: 'POST'
         });
-        
+
         if (!response.ok) {
             const err = await response.json();
             throw new Error(err.detail || 'Failed to extract bounds');
         }
-        
+
         const data = await response.json();
         state.bounds = data.bounds;
-        
+
         // Update UI
         document.getElementById('north').value = data.bounds.north.toFixed(4);
         document.getElementById('south').value = data.bounds.south.toFixed(4);
         document.getElementById('east').value = data.bounds.east.toFixed(4);
         document.getElementById('west').value = data.bounds.west.toFixed(4);
-        
+
         hideLoading();
         setStatus('Bounds extracted', 'success');
-        
+
     } catch (err) {
         hideLoading();
         setStatus('Gemini error: ' + err.message, 'error');
@@ -510,22 +510,22 @@ async function generateHeightmapWithGemini() {
         setStatus('Upload a file first', 'error');
         return;
     }
-    
+
     showLoading('Generating heightmap with Gemini...');
     setStatus('Generating heightmap...', 'loading');
-    
+
     try {
         const response = await fetch(`/api/generate-heightmap?file_id=${state.fileId}`, {
             method: 'POST'
         });
-        
+
         if (!response.ok) {
             const err = await response.json();
             throw new Error(err.detail || 'Failed to generate heightmap');
         }
-        
+
         const data = await response.json();
-        
+
         // Load heightmap texture
         const loader = new THREE.TextureLoader();
         state.heightmapTexture = loader.load(
@@ -536,7 +536,7 @@ async function generateHeightmapWithGemini() {
                 setStatus('Heightmap generated', 'success');
             }
         );
-        
+
     } catch (err) {
         hideLoading();
         setStatus('Gemini error: ' + err.message, 'error');
@@ -557,10 +557,10 @@ function updateOrbitCamera() {
 function toggleFlyMode() {
     const canvas = state.renderer.domElement;
     state.cameraMode = state.cameraMode === 'orbit' ? 'fly' : 'orbit';
-    
-    document.getElementById('fly-btn').textContent = 
+
+    document.getElementById('fly-btn').textContent =
         state.cameraMode === 'orbit' ? 'Enter Fly Mode' : 'Exit Fly Mode';
-    
+
     if (state.cameraMode === 'fly') {
         state.camera.rotation.order = 'YXZ';
         canvas.requestPointerLock();
@@ -574,34 +574,34 @@ let lastTime = performance.now();
 
 function animate() {
     requestAnimationFrame(animate);
-    
+
     const now = performance.now();
     const delta = (now - lastTime) / 1000;
     lastTime = now;
-    
+
     // Auto-rotate in orbit mode
     if (state.cameraMode === 'orbit' && !state.isDragging) {
         const speed = parseFloat(document.getElementById('rotation').value) / 100;
         state.orbitAngle += 0.003 * speed;
         updateOrbitCamera();
     }
-    
+
     // Fly mode movement
     if (state.cameraMode === 'fly') {
         const speed = state.keys['ShiftLeft'] ? 80 : 25;
         const dir = new THREE.Vector3();
-        
+
         if (state.keys['KeyW']) dir.z -= 1;
         if (state.keys['KeyS']) dir.z += 1;
         if (state.keys['KeyA']) dir.x -= 1;
         if (state.keys['KeyD']) dir.x += 1;
         if (state.keys['Space']) dir.y += 1;
         if (state.keys['KeyC']) dir.y -= 1;
-        
+
         dir.normalize().applyQuaternion(state.camera.quaternion);
         state.camera.position.addScaledVector(dir, speed * delta);
     }
-    
+
     state.renderer.render(state.scene, state.camera);
 }
 

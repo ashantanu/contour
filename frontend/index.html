@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Contour - 2D Maps to 3D Terrain</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="/static/style.css">
 </head>
 
 <body>
@@ -35,19 +35,19 @@
             <div class="bounds-grid">
                 <div class="input-group">
                     <label>North</label>
-                    <input type="number" id="north" step="0.0001" value="22.25">
+                    <input type="number" id="north" step="0.0001" placeholder="e.g. 22.5">
                 </div>
                 <div class="input-group">
                     <label>South</label>
-                    <input type="number" id="south" step="0.0001" value="21.85">
+                    <input type="number" id="south" step="0.0001" placeholder="e.g. 22.5">
                 </div>
                 <div class="input-group">
                     <label>West</label>
-                    <input type="number" id="west" step="0.0001" value="-159.80">
+                    <input type="number" id="west" step="0.0001" placeholder="e.g. 22.5">
                 </div>
                 <div class="input-group">
                     <label>East</label>
-                    <input type="number" id="east" step="0.0001" value="-159.25">
+                    <input type="number" id="east" step="0.0001" placeholder="e.g. 22.5">
                 </div>
             </div>
             <button class="secondary" id="extract-bounds-btn">🤖 Extract with Gemini</button>
@@ -65,8 +65,8 @@
             <h3>4. Explore</h3>
             <div class="slider-group">
                 <label>Elevation Scale</label>
-                <input type="range" id="exag" min="1" max="80" value="25">
-                <span class="value" id="exag-val">25×</span>
+                <input type="range" id="exag" min="1" max="80" value="5">
+                <span class="value" id="exag-val">5×</span>
             </div>
             <div class="slider-group">
                 <label>Rotation Speed</label>
@@ -94,7 +94,7 @@
 
     <!-- Three.js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="app.js"></script>
+    <script src="/static/app.js"></script>
 </body>
 
 </html>
