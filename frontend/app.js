@@ -162,6 +162,7 @@ function setupUI() {
     // Terrain buttons
     document.getElementById('fetch-dem-btn').addEventListener('click', fetchDEM);
     document.getElementById('gemini-heightmap-btn').addEventListener('click', generateHeightmapWithGemini);
+    document.getElementById('stylize-btn').addEventListener('click', stylizeTexture);
 
     // View controls
     const exagSlider = document.getElementById('exag');
@@ -646,6 +647,60 @@ async function generateHeightmapWithGemini() {
     } catch (err) {
         hideLoading();
         setStatus('Gemini error: ' + err.message, 'error');
+        console.error(err);
+    }
+}
+
+async function stylizeTexture() {
+    if (!state.fileId) {
+        setStatus('Upload a file first', 'error');
+        return;
+    }
+
+    const btn = document.getElementById('stylize-btn');
+    const originalText = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = '🎨 Stylizing...';
+
+    showLoading('Stylizing texture (30-60s)...');
+    setStatus('Sending to FAL API...', 'loading');
+
+    try {
+        const response = await fetch(`/api/stylize?file_id=${state.fileId}`, {
+            method: 'POST'
+        });
+
+        if (!response.ok) {
+            const err = await response.json();
+            throw new Error(err.detail || 'Stylization failed');
+        }
+
+        const data = await response.json();
+
+        // Load stylized texture from FAL CDN
+        const loader = new THREE.TextureLoader();
+        loader.setCrossOrigin('anonymous');
+
+        state.colorTexture = loader.load(
+            data.stylized_url,
+            () => {
+                createTerrain();
+                hideLoading();
+                btn.disabled = false;
+                btn.textContent = originalText;
+                setStatus('Texture stylized successfully', 'success');
+            },
+            undefined,
+            (error) => {
+                throw new Error('Failed to load stylized texture: ' + error.message);
+            }
+        );
+
+    } catch (err) {
+        hideLoading();
+        btn.disabled = false;
+        btn.textContent = originalText;
+        setStatus('Stylization error: ' + err.message, 'error');
         console.error(err);
     }
 }

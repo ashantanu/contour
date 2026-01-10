@@ -13,6 +13,7 @@ from dotenv import load_dotenv
 
 from . import terrain
 from . import gemini_client
+from . import fal_stylize
 
 # Load environment variables
 load_dotenv()
@@ -143,7 +144,29 @@ async def narrate(location_info: dict, features: list[str] = []):
         raise HTTPException(500, f"Gemini error: {str(e)}")
 
 
+@app.post("/api/stylize")
+async def stylize(file_id: str):
+    """
+    Stylize uploaded texture using FAL Nano Banana Pro.
+    """
+    # Find the file
+    files = list(UPLOADS_DIR.glob(f"{file_id}.*"))
+    if not files:
+        raise HTTPException(404, "File not found")
+
+    file_path = files[0]
+
+    try:
+        stylized_url = fal_stylize.stylize_texture(str(file_path))
+        return JSONResponse({
+            "success": True,
+            "stylized_url": stylized_url
+        })
+    except Exception as e:
+        raise HTTPException(500, f"Stylization error: {str(e)}")
+
+
 @app.get("/api/health")
 async def health():
     """Health check endpoint."""
-    return {"status": "ok", "gemini": gemini_client.HAS_GEMINI}
+    return {"status": "ok", "gemini": gemini_client.HAS_GEMINI, "fal": fal_stylize.HAS_FAL}
