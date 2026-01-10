@@ -4,7 +4,7 @@
 
 Upload a USGS topo map or GeoTIFF, and Contour builds a 3D flyable terrain you can explore while chatting with Gemini about what you're seeing.
 
-![Contour Demo](https://drive.google.com/file/d/1bTEDKPn7YTp_soc8YL3LzkOpFNMKOYcw/view?usp=sharing)
+[**Watch Demo Video**](https://drive.google.com/file/d/1bTEDKPn7YTp_soc8YL3LzkOpFNMKOYcw/view?usp=sharing)
 
 ## Features
 
