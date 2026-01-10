@@ -31,6 +31,9 @@ data/*.geotiff
 data/*.pdf
 *.zip
 
+# Uploads (runtime data)
+uploads/
+
 # Generated outputs
 outputs/
 *.png
