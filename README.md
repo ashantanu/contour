@@ -2,6 +2,8 @@
 
 **Transform 2D topographic maps into explorable 3D terrain with an AI tour guide.**
 
+🚨🚨🚨 [**Watch Demo Video**](https://drive.google.com/file/d/1bTEDKPn7YTp_soc8YL3LzkOpFNMKOYcw/view?usp=sharing) 🚨🚨🚨 
+
 <p align="center">
   <img src="assets/image1.png" width="49%" alt="Orbit view of Kauai terrain" />
   <img src="assets/image2.png" width="49%" alt="Flying over terrain in plane mode" />
@@ -24,8 +26,6 @@ Upload a USGS topo map or GeoTIFF, and Contour builds a 3D flyable terrain you c
 | 🎨 **Texture Stylization** | Nano Banana Pro (via fal.ai) | Adds vibrant hypsometric-tinted textures and colours |
 
 ---
-
-[**Watch Demo Video**](https://drive.google.com/file/d/1bTEDKPn7YTp_soc8YL3LzkOpFNMKOYcw/view?usp=sharing)
 
 ## Features
 
