@@ -3,7 +3,7 @@
  * Renders OSM buildings as 3D meshes in Three.js scene
  */
 
-import * as THREE from 'three';
+// THREE is loaded globally via script tag
 
 export class BuildingRenderer {
   constructor(scene, bounds) {

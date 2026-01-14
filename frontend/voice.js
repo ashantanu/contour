@@ -527,3 +527,6 @@ Your role:
         }
     };
 })();
+
+// Make VoiceChat available globally for app.js module
+window.VoiceChat = VoiceChat;

@@ -3,8 +3,7 @@
  * Creates 3D representations of famous landmarks and monuments
  */
 
-import * as THREE from 'three';
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+// THREE and GLTFLoader are loaded globally via script tags
 
 export class LandmarkLoader {
   constructor(scene, bounds) {
@@ -15,7 +14,7 @@ export class LandmarkLoader {
     this.scene.add(this.landmarkGroup);
 
     // GLTF loader for 3D models
-    this.gltfLoader = new GLTFLoader();
+    this.gltfLoader = new THREE.GLTFLoader();
 
     // Cache for loaded models
     this.modelCache = new Map();
