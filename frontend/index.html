@@ -15,51 +15,127 @@
     <!-- Control Panel -->
     <div id="controls">
         <h1>🗺️ Contour</h1>
-        <p class="subtitle">2D Maps → 3D Terrain</p>
+        <p class="subtitle">Explore India in 3D</p>
 
-        <!-- Upload Section -->
-        <section id="upload-section">
-            <h3 data-step-label="Upload Map"></h3>
-            <div id="drop-zone">
-                <p>Drop GeoTIFF or image<br><small>or click to browse</small></p>
-                <input type="file" id="file-input" accept=".tif,.tiff,.jpg,.jpeg,.png,.webp">
-            </div>
-            <div id="file-info" class="hidden">
-                <span id="file-name"></span>
-                <span id="file-bounds" class="badge"></span>
-            </div>
-        </section>
+        <!-- Mode Switcher -->
+        <div class="mode-switcher">
+            <button class="mode-btn active" data-mode="presets">📍 Quick Presets</button>
+            <button class="mode-btn" data-mode="custom">📤 Custom Upload</button>
+        </div>
 
-        <!-- Bounds Section (for non-GeoTIFF) -->
-        <section id="bounds-section" class="hidden">
-            <h3 data-step-label="Set Bounds"></h3>
-            <div class="bounds-grid">
-                <div class="input-group">
-                    <label>North</label>
-                    <input type="number" id="north" step="0.0001" placeholder="e.g. 22.5">
-                </div>
-                <div class="input-group">
-                    <label>South</label>
-                    <input type="number" id="south" step="0.0001" placeholder="e.g. 22.5">
-                </div>
-                <div class="input-group">
-                    <label>West</label>
-                    <input type="number" id="west" step="0.0001" placeholder="e.g. 22.5">
-                </div>
-                <div class="input-group">
-                    <label>East</label>
-                    <input type="number" id="east" step="0.0001" placeholder="e.g. 22.5">
-                </div>
+        <!-- PRESET MODE -->
+        <div id="preset-mode" class="mode-panel active">
+            <!-- Category Tabs -->
+            <div class="category-tabs">
+                <button class="category-tab active" data-category="terrain">🏔️ Terrains</button>
+                <button class="category-tab" data-category="landmark">🏛️ Landmarks</button>
+                <button class="category-tab" data-category="city">🏙️ Cities</button>
+                <button class="category-tab" data-category="combined">🌆 Combined</button>
             </div>
-            <button class="secondary" id="extract-bounds-btn">🤖 Extract with Gemini</button>
-        </section>
 
-        <!-- Terrain Section -->
-        <section id="terrain-section" class="hidden">
-            <h3 data-step-label="Build Terrain"></h3>
-            <button class="primary" id="fetch-dem-btn">Fetch Real DEM</button>
-            <button class="secondary" id="stylize-btn">🎨 Stylize Texture</button>
-        </section>
+            <!-- Terrain Presets -->
+            <section id="preset-terrain" class="preset-panel active">
+                <h3>Indian Terrains</h3>
+                <select id="terrain-select" size="6" class="preset-select">
+                    <!-- Populated by JS -->
+                </select>
+                <div class="preset-info">
+                    <div id="terrain-info-name" class="preset-name">Select a terrain</div>
+                    <div id="terrain-info-desc" class="preset-desc"></div>
+                    <span id="terrain-info-region" class="badge"></span>
+                </div>
+                <button class="primary" id="load-terrain-btn">Load Terrain</button>
+            </section>
+
+            <!-- Landmark Presets -->
+            <section id="preset-landmark" class="preset-panel">
+                <h3>Monuments & Landmarks</h3>
+                <select id="landmark-select" size="6" class="preset-select">
+                    <!-- Populated by JS -->
+                </select>
+                <div class="preset-info">
+                    <div id="landmark-info-name" class="preset-name">Select a landmark</div>
+                    <div id="landmark-info-desc" class="preset-desc"></div>
+                    <span id="landmark-info-region" class="badge"></span>
+                </div>
+                <button class="primary" id="load-landmark-btn">Load Monument</button>
+            </section>
+
+            <!-- City Presets -->
+            <section id="preset-city" class="preset-panel">
+                <h3>Urban Areas</h3>
+                <select id="city-select" size="6" class="preset-select">
+                    <!-- Populated by JS -->
+                </select>
+                <div class="preset-info">
+                    <div id="city-info-name" class="preset-name">Select a city</div>
+                    <div id="city-info-desc" class="preset-desc"></div>
+                    <span id="city-info-region" class="badge"></span>
+                </div>
+                <button class="primary" id="load-city-btn">Load City</button>
+            </section>
+
+            <!-- Combined Presets -->
+            <section id="preset-combined" class="preset-panel">
+                <h3>Cities with Landmarks</h3>
+                <select id="combined-select" size="6" class="preset-select">
+                    <!-- Populated by JS -->
+                </select>
+                <div class="preset-info">
+                    <div id="combined-info-name" class="preset-name">Select a scene</div>
+                    <div id="combined-info-desc" class="preset-desc"></div>
+                    <span id="combined-info-region" class="badge"></span>
+                </div>
+                <button class="primary" id="load-combined-btn">Load Scene</button>
+            </section>
+        </div>
+
+        <!-- CUSTOM UPLOAD MODE -->
+        <div id="custom-mode" class="mode-panel">
+            <!-- Upload Section -->
+            <section id="upload-section">
+                <h3 data-step-label="Upload Map"></h3>
+                <div id="drop-zone">
+                    <p>Drop GeoTIFF or image<br><small>or click to browse</small></p>
+                    <input type="file" id="file-input" accept=".tif,.tiff,.jpg,.jpeg,.png,.webp">
+                </div>
+                <div id="file-info" class="hidden">
+                    <span id="file-name"></span>
+                    <span id="file-bounds" class="badge"></span>
+                </div>
+            </section>
+
+            <!-- Bounds Section (for non-GeoTIFF) -->
+            <section id="bounds-section" class="hidden">
+                <h3 data-step-label="Set Bounds"></h3>
+                <div class="bounds-grid">
+                    <div class="input-group">
+                        <label>North</label>
+                        <input type="number" id="north" step="0.0001" placeholder="e.g. 22.5">
+                    </div>
+                    <div class="input-group">
+                        <label>South</label>
+                        <input type="number" id="south" step="0.0001" placeholder="e.g. 22.5">
+                    </div>
+                    <div class="input-group">
+                        <label>West</label>
+                        <input type="number" id="west" step="0.0001" placeholder="e.g. 22.5">
+                    </div>
+                    <div class="input-group">
+                        <label>East</label>
+                        <input type="number" id="east" step="0.0001" placeholder="e.g. 22.5">
+                    </div>
+                </div>
+                <button class="secondary" id="extract-bounds-btn">🤖 Extract with Gemini</button>
+            </section>
+
+            <!-- Terrain Section -->
+            <section id="terrain-section" class="hidden">
+                <h3 data-step-label="Build Terrain"></h3>
+                <button class="primary" id="fetch-dem-btn">Fetch Real DEM</button>
+                <button class="secondary" id="stylize-btn">🎨 Stylize Texture</button>
+            </section>
+        </div>
 
         <!-- View Controls -->
         <section id="view-section" class="hidden">
@@ -127,8 +203,8 @@
     <!-- Three.js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
-    <script src="/static/voice.js"></script>
-    <script src="/static/app.js"></script>
+    <script type="module" src="/static/voice.js"></script>
+    <script type="module" src="/static/app.js"></script>
 </body>
 
 </html>

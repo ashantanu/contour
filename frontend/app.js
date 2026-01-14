@@ -4,6 +4,17 @@
  */
 
 // ===========================================
+// IMPORTS - Preset System
+// ===========================================
+import { TERRAIN_PRESETS } from './presets/terrain-presets.js';
+import { LANDMARK_PRESETS } from './presets/landmark-presets.js';
+import { CITY_PRESETS } from './presets/city-presets.js';
+import { COMBINED_PRESETS } from './presets/combined-presets.js';
+import { OSMBuildingFetcher } from './modules/osm-buildings.js';
+import { BuildingRenderer } from './modules/building-renderer.js';
+import { LandmarkLoader } from './modules/landmark-loader.js';
+
+// ===========================================
 // STATE
 // ===========================================
 const state = {
@@ -36,7 +47,15 @@ const state = {
     plane: null,
     planeModel: null,
     planeMode: false,
-    planeAudio: null
+    planeAudio: null,
+
+    // Preset system
+    currentMode: 'presets', // 'presets' or 'custom'
+    currentCategory: 'terrain', // 'terrain', 'landmark', 'city', 'combined'
+    currentPreset: null,
+    osmFetcher: null,
+    buildingRenderer: null,
+    landmarkLoader: null
 };
 
 // ===========================================
@@ -267,6 +286,414 @@ function setupUI() {
         state.camera.updateProjectionMatrix();
         state.renderer.setSize(window.innerWidth, window.innerHeight);
     });
+
+    // ========== PRESET SYSTEM SETUP ==========
+    setupPresetUI();
+}
+
+// ===========================================
+// PRESET SYSTEM
+// ===========================================
+function setupPresetUI() {
+    // Initialize OSM fetcher
+    state.osmFetcher = new OSMBuildingFetcher();
+
+    // Mode switcher
+    document.querySelectorAll('.mode-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const mode = btn.dataset.mode;
+            state.currentMode = mode;
+
+            // Update button states
+            document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+
+            // Toggle mode panels
+            document.getElementById('preset-mode').classList.toggle('active', mode === 'presets');
+            document.getElementById('custom-mode').classList.toggle('active', mode === 'custom');
+        });
+    });
+
+    // Category tabs
+    document.querySelectorAll('.category-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+            const category = tab.dataset.category;
+            state.currentCategory = category;
+
+            // Update tab states
+            document.querySelectorAll('.category-tab').forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+
+            // Toggle preset panels
+            document.querySelectorAll('.preset-panel').forEach(panel => panel.classList.remove('active'));
+            document.getElementById(`preset-${category}`).classList.add('active');
+        });
+    });
+
+    // Populate preset dropdowns
+    populatePresetDropdowns();
+
+    // Preset select change handlers
+    setupPresetChangeHandlers();
+
+    // Load buttons
+    document.getElementById('load-terrain-btn').addEventListener('click', () => loadPreset('terrain'));
+    document.getElementById('load-landmark-btn').addEventListener('click', () => loadPreset('landmark'));
+    document.getElementById('load-city-btn').addEventListener('click', () => loadPreset('city'));
+    document.getElementById('load-combined-btn').addEventListener('click', () => loadPreset('combined'));
+}
+
+function populatePresetDropdowns() {
+    // Terrain presets
+    const terrainSelect = document.getElementById('terrain-select');
+    TERRAIN_PRESETS.forEach((preset, idx) => {
+        const option = document.createElement('option');
+        option.value = idx;
+        option.textContent = preset.name;
+        option.dataset.region = preset.region;
+        option.dataset.description = preset.description;
+        terrainSelect.appendChild(option);
+    });
+
+    // Landmark presets
+    const landmarkSelect = document.getElementById('landmark-select');
+    LANDMARK_PRESETS.forEach((preset, idx) => {
+        const option = document.createElement('option');
+        option.value = idx;
+        option.textContent = preset.name;
+        option.dataset.region = preset.region;
+        option.dataset.description = preset.description;
+        landmarkSelect.appendChild(option);
+    });
+
+    // City presets
+    const citySelect = document.getElementById('city-select');
+    CITY_PRESETS.forEach((preset, idx) => {
+        const option = document.createElement('option');
+        option.value = idx;
+        option.textContent = preset.name;
+        option.dataset.region = preset.region;
+        option.dataset.description = preset.description;
+        citySelect.appendChild(option);
+    });
+
+    // Combined presets
+    const combinedSelect = document.getElementById('combined-select');
+    COMBINED_PRESETS.forEach((preset, idx) => {
+        const option = document.createElement('option');
+        option.value = idx;
+        option.textContent = preset.name;
+        option.dataset.region = preset.region;
+        option.dataset.description = preset.description;
+        combinedSelect.appendChild(option);
+    });
+}
+
+function setupPresetChangeHandlers() {
+    // Terrain select
+    document.getElementById('terrain-select').addEventListener('change', (e) => {
+        const idx = e.target.value;
+        if (idx !== '') {
+            const preset = TERRAIN_PRESETS[idx];
+            updatePresetInfo('terrain', preset);
+        }
+    });
+
+    // Landmark select
+    document.getElementById('landmark-select').addEventListener('change', (e) => {
+        const idx = e.target.value;
+        if (idx !== '') {
+            const preset = LANDMARK_PRESETS[idx];
+            updatePresetInfo('landmark', preset);
+        }
+    });
+
+    // City select
+    document.getElementById('city-select').addEventListener('change', (e) => {
+        const idx = e.target.value;
+        if (idx !== '') {
+            const preset = CITY_PRESETS[idx];
+            updatePresetInfo('city', preset);
+        }
+    });
+
+    // Combined select
+    document.getElementById('combined-select').addEventListener('change', (e) => {
+        const idx = e.target.value;
+        if (idx !== '') {
+            const preset = COMBINED_PRESETS[idx];
+            updatePresetInfo('combined', preset);
+        }
+    });
+}
+
+function updatePresetInfo(category, preset) {
+    const nameEl = document.getElementById(`${category}-info-name`);
+    const descEl = document.getElementById(`${category}-info-desc`);
+    const regionEl = document.getElementById(`${category}-info-region`);
+
+    if (nameEl) nameEl.textContent = preset.name;
+    if (descEl) descEl.textContent = preset.description;
+    if (regionEl) regionEl.textContent = preset.region;
+}
+
+async function loadPreset(category) {
+    const selectId = `${category}-select`;
+    const selectEl = document.getElementById(selectId);
+    const idx = selectEl.value;
+
+    if (!idx) {
+        setStatus('Please select a preset first', 'error');
+        return;
+    }
+
+    let preset;
+    switch (category) {
+        case 'terrain':
+            preset = TERRAIN_PRESETS[idx];
+            await loadTerrainPreset(preset);
+            break;
+        case 'landmark':
+            preset = LANDMARK_PRESETS[idx];
+            await loadLandmarkPreset(preset);
+            break;
+        case 'city':
+            preset = CITY_PRESETS[idx];
+            await loadCityPreset(preset);
+            break;
+        case 'combined':
+            preset = COMBINED_PRESETS[idx];
+            await loadCombinedPreset(preset);
+            break;
+    }
+
+    state.currentPreset = preset;
+}
+
+async function loadTerrainPreset(preset) {
+    showLoading(`Loading ${preset.name}...`);
+    setStatus(`Loading terrain: ${preset.name}`);
+
+    try {
+        // Set bounds
+        state.bounds = preset.bounds;
+
+        // Fetch DEM data using existing function
+        await fetchDEM();
+
+        // Apply exaggeration
+        const exagSlider = document.getElementById('exag');
+        exagSlider.value = preset.exaggeration;
+        document.getElementById('exag-val').textContent = preset.exaggeration + '×';
+        createTerrain();
+
+        // Position camera
+        if (preset.cameraPosition) {
+            state.camera.position.set(...preset.cameraPosition);
+            state.camera.lookAt(0, 0, 0);
+        }
+
+        setStatus(`Loaded ${preset.name}`);
+        hideLoading();
+
+        // Show view controls
+        document.getElementById('view-section').classList.remove('hidden');
+        document.getElementById('lighting-section').classList.remove('hidden');
+        document.getElementById('voice-section').classList.remove('hidden');
+    } catch (error) {
+        console.error('Failed to load terrain preset:', error);
+        setStatus('Failed to load terrain', 'error');
+        hideLoading();
+    }
+}
+
+async function loadLandmarkPreset(preset) {
+    showLoading(`Loading ${preset.name}...`);
+    setStatus(`Loading landmark: ${preset.name}`);
+
+    try {
+        // Set bounds
+        state.bounds = preset.bounds;
+
+        // Fetch DEM
+        await fetchDEM();
+
+        // Apply exaggeration
+        const exagSlider = document.getElementById('exag');
+        exagSlider.value = preset.exaggeration;
+        document.getElementById('exag-val').textContent = preset.exaggeration + '×';
+        createTerrain();
+
+        // Initialize landmark loader
+        if (!state.landmarkLoader) {
+            state.landmarkLoader = new LandmarkLoader(state.scene, preset.bounds);
+        } else {
+            state.landmarkLoader.bounds = preset.bounds;
+        }
+
+        // Load landmark
+        if (preset.landmark) {
+            await state.landmarkLoader.loadLandmark(preset.landmark);
+        }
+
+        // Optionally load buildings
+        if (preset.loadBuildings) {
+            await loadBuildingsForPreset(preset);
+        }
+
+        // Position camera
+        if (preset.cameraPosition) {
+            state.camera.position.set(...preset.cameraPosition);
+        }
+        if (preset.landmark) {
+            const pos = state.landmarkLoader.latLonToPosition(
+                preset.landmark.position.lat,
+                preset.landmark.position.lon
+            );
+            state.camera.lookAt(pos.x, preset.landmark.height / 2, pos.z);
+        }
+
+        setStatus(`Loaded ${preset.name}`);
+        hideLoading();
+
+        // Show view controls
+        document.getElementById('view-section').classList.remove('hidden');
+        document.getElementById('lighting-section').classList.remove('hidden');
+        document.getElementById('voice-section').classList.remove('hidden');
+    } catch (error) {
+        console.error('Failed to load landmark preset:', error);
+        setStatus('Failed to load landmark', 'error');
+        hideLoading();
+    }
+}
+
+async function loadCityPreset(preset) {
+    showLoading(`Loading ${preset.name}...`);
+    setStatus(`Loading city: ${preset.name}`);
+
+    try {
+        // Set bounds
+        state.bounds = preset.bounds;
+
+        // Fetch DEM
+        await fetchDEM();
+
+        // Apply exaggeration
+        const exagSlider = document.getElementById('exag');
+        exagSlider.value = preset.exaggeration;
+        document.getElementById('exag-val').textContent = preset.exaggeration + '×';
+        createTerrain();
+
+        // Load buildings
+        await loadBuildingsForPreset(preset);
+
+        // Position camera
+        if (preset.cameraPosition) {
+            state.camera.position.set(...preset.cameraPosition);
+            state.camera.lookAt(0, 0, 0);
+        }
+
+        setStatus(`Loaded ${preset.name}`);
+        hideLoading();
+
+        // Show view controls
+        document.getElementById('view-section').classList.remove('hidden');
+        document.getElementById('lighting-section').classList.remove('hidden');
+        document.getElementById('voice-section').classList.remove('hidden');
+    } catch (error) {
+        console.error('Failed to load city preset:', error);
+        setStatus('Failed to load city', 'error');
+        hideLoading();
+    }
+}
+
+async function loadCombinedPreset(preset) {
+    showLoading(`Loading ${preset.name}...`);
+    setStatus(`Loading scene: ${preset.name}`);
+
+    try {
+        // Set bounds
+        state.bounds = preset.bounds;
+
+        // Fetch DEM
+        await fetchDEM();
+
+        // Apply exaggeration
+        const exagSlider = document.getElementById('exag');
+        exagSlider.value = preset.exaggeration;
+        document.getElementById('exag-val').textContent = preset.exaggeration + '×';
+        createTerrain();
+
+        // Initialize landmark loader
+        if (!state.landmarkLoader) {
+            state.landmarkLoader = new LandmarkLoader(state.scene, preset.bounds);
+        } else {
+            state.landmarkLoader.bounds = preset.bounds;
+        }
+
+        // Load buildings if specified
+        if (preset.loadBuildings) {
+            await loadBuildingsForPreset(preset);
+        }
+
+        // Load landmarks
+        if (preset.landmarks) {
+            for (const landmarkData of preset.landmarks) {
+                await state.landmarkLoader.loadLandmark(landmarkData);
+            }
+        }
+
+        // Position camera
+        if (preset.cameraPosition) {
+            state.camera.position.set(...preset.cameraPosition);
+            state.camera.lookAt(0, 0, 0);
+        }
+
+        setStatus(`Loaded ${preset.name}`);
+        hideLoading();
+
+        // Show view controls
+        document.getElementById('view-section').classList.remove('hidden');
+        document.getElementById('lighting-section').classList.remove('hidden');
+        document.getElementById('voice-section').classList.remove('hidden');
+    } catch (error) {
+        console.error('Failed to load combined preset:', error);
+        setStatus('Failed to load scene', 'error');
+        hideLoading();
+    }
+}
+
+async function loadBuildingsForPreset(preset) {
+    if (!preset.bounds) return;
+
+    try {
+        setStatus('Fetching buildings from OpenStreetMap...');
+
+        // Fetch OSM data
+        const osmData = await state.osmFetcher.fetchBuildings(preset.bounds);
+        const buildings = state.osmFetcher.parseBuildings(osmData);
+
+        if (buildings.length === 0) {
+            console.warn('No buildings found in this area');
+            return;
+        }
+
+        // Initialize building renderer
+        if (!state.buildingRenderer) {
+            state.buildingRenderer = new BuildingRenderer(state.scene, preset.bounds);
+        } else {
+            state.buildingRenderer.clearBuildings();
+            state.buildingRenderer.bounds = preset.bounds;
+        }
+
+        // Render buildings
+        state.buildingRenderer.addBuildingsToScene(buildings);
+
+        setStatus(`Loaded ${buildings.length} buildings`);
+    } catch (error) {
+        console.error('Failed to load buildings:', error);
+        // Don't fail the whole preset load if buildings fail
+    }
 }
 
 function updateStepNumbers() {
