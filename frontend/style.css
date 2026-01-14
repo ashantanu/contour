@@ -329,3 +329,151 @@ button:disabled {
     border-color: #e74c3c;
     color: white;
 }
+
+/* ==================== PRESET SYSTEM ==================== */
+
+/* Mode Switcher */
+.mode-switcher {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 15px;
+}
+
+.mode-btn {
+    flex: 1;
+    padding: 10px;
+    font-size: 12px;
+    background: #1a1a2e;
+    border: 1px solid #333;
+    color: #aaa;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.mode-btn.active {
+    background: #4ecdc4;
+    color: #000;
+    border-color: #4ecdc4;
+}
+
+.mode-btn:hover:not(.active) {
+    background: #252540;
+    color: #fff;
+}
+
+/* Mode Panels */
+.mode-panel {
+    display: none;
+}
+
+.mode-panel.active {
+    display: block;
+}
+
+/* Category Tabs */
+.category-tabs {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+    margin-bottom: 15px;
+}
+
+.category-tab {
+    padding: 8px 6px;
+    font-size: 11px;
+    background: #1a1a2e;
+    border: 1px solid #333;
+    color: #aaa;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+}
+
+.category-tab.active {
+    background: #2a2a4e;
+    border-color: #4ecdc4;
+    color: #4ecdc4;
+}
+
+.category-tab:hover:not(.active) {
+    background: #252540;
+    color: #fff;
+}
+
+/* Preset Panels */
+.preset-panel {
+    display: none;
+}
+
+.preset-panel.active {
+    display: block;
+}
+
+.preset-panel h3 {
+    font-size: 12px;
+    text-transform: none;
+    letter-spacing: 0;
+    color: #aaa;
+    margin: 0 0 10px 0;
+    padding: 0;
+    border: none;
+}
+
+/* Preset Select */
+.preset-select {
+    width: 100%;
+    padding: 8px;
+    background: #111;
+    border: 1px solid #333;
+    border-radius: 6px;
+    color: #ddd;
+    font-size: 12px;
+    margin-bottom: 10px;
+    outline: none;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.preset-select:focus {
+    border-color: #4ecdc4;
+}
+
+.preset-select option {
+    padding: 8px;
+    background: #111;
+    color: #ddd;
+}
+
+.preset-select option:hover,
+.preset-select option:checked {
+    background: #222;
+}
+
+/* Preset Info */
+.preset-info {
+    background: #0d0d1a;
+    padding: 10px;
+    border-radius: 6px;
+    margin-bottom: 12px;
+    min-height: 70px;
+}
+
+.preset-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: #fff;
+    margin-bottom: 6px;
+}
+
+.preset-desc {
+    font-size: 11px;
+    color: #888;
+    margin-bottom: 6px;
+    line-height: 1.4;
+}
+
+.preset-info .badge {
+    margin-left: 0;
+    margin-top: 4px;
+}
